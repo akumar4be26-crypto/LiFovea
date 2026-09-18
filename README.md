@@ -1,4 +1,4 @@
-# LiFovea— Adaptive Variable-Resolution 2.5D Lidar Mapping
+# LiFovea— Adaptive Variable-Resolution 2.5D Lidar Mapping System
 
 A perception stack that turns raw spinning-lidar point clouds into a **foveated
 2.5D map**: 5 cm cells inside the braking distance, 80 cm cells at the horizon,
