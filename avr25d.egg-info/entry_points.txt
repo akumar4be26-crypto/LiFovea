@@ -1,0 +1,2 @@
+[console_scripts]
+avr25d = avr25d.cli:main

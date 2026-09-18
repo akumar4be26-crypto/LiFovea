@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+build/
+web/demo_data.json
+checkpoints/*.pt
+data/real/*
+!data/real/README.md
+*.zip
+*.tgz

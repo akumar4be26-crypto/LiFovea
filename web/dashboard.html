@@ -1,0 +1,1378 @@
+<title>Foveated Lidar Mapping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --paper:#F6F3EC; --paper-2:#EFEADF; --panel:#FDFBF6;
+  --ink:#191F28; --ink-2:#4A5462; --ink-3:#7C8592;
+  --rule:#D7CFBE; --rule-2:#EAE3D5;
+  --blue:#1F5C8C; --blue-soft:#DCE8F1;
+  --oxide:#B3492D;
+  --c0:#2E7D6B; --c1:#C78A2B; --c2:#5B6B86; --c3:#C0392B;
+  --grid-ink:#B9AF9B;
+  --on-accent:#FFFFFF;
+  --shadow:0 1px 2px rgba(25,31,40,.06);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10141A; --paper-2:#161C24; --panel:#141A22;
+    --ink:#E7E2D6; --ink-2:#AEB6C1; --ink-3:#7A8492;
+    --rule:#2A333F; --rule-2:#202832;
+    --blue:#6BA9D8; --blue-soft:#1B2A38;
+    --oxide:#D9714F;
+    --c0:#4FB69B; --c1:#E0AC4F; --c2:#8C9CB8; --c3:#E06A5B;
+    --grid-ink:#39424E;
+    --on-accent:#0C1218;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10141A; --paper-2:#161C24; --panel:#141A22;
+  --ink:#E7E2D6; --ink-2:#AEB6C1; --ink-3:#7A8492;
+  --rule:#2A333F; --rule-2:#202832;
+  --blue:#6BA9D8; --blue-soft:#1B2A38;
+  --oxide:#D9714F;
+  --c0:#4FB69B; --c1:#E0AC4F; --c2:#8C9CB8; --c3:#E06A5B;
+  --grid-ink:#39424E;
+  --on-accent:#0C1218;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding-inline:16px;padding-block:20px 56px}
+
+/* ---------- masthead ---------- */
+header.mast{border-bottom:1.5px solid var(--ink);padding-bottom:14px;margin-bottom:20px}
+.mast-row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--cond);font-weight:700;font-size:clamp(22px,3.3vw,34px);
+   letter-spacing:-.015em;margin:0;text-wrap:balance;line-height:1.1}
+.sub{color:var(--ink-2);margin:6px 0 0;max-width:62ch}
+.stamp{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right;
+       line-height:1.7;letter-spacing:.02em}
+.stamp b{color:var(--blue);font-weight:600}
+
+/* ---------- layout ---------- */
+.deck{display:grid;grid-template-columns:220px minmax(0,1fr) 240px;gap:14px;align-items:start}
+@media (max-width:1080px){.deck{grid-template-columns:minmax(0,1fr)}}
+
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:3px;
+       padding:14px;box-shadow:var(--shadow)}
+.panel + .panel{margin-top:14px}
+.ptitle{font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.11em;
+        text-transform:uppercase;color:var(--ink-3);margin:0 0 10px;
+        display:flex;justify-content:space-between;align-items:baseline}
+.ptitle span{font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--blue)}
+.mode-status{font-size:11px;color:var(--blue);font-weight:600}
+
+/* ---------- controls ---------- */
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{display:flex;justify-content:space-between;align-items:baseline;
+             font-size:12px;color:var(--ink-2);margin-bottom:5px}
+.field .val{font-family:var(--mono);font-size:12px;color:var(--ink);
+            font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--blue);height:18px;margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{flex:1 1 auto;font-family:var(--cond);font-size:12px;font-weight:600;
+            letter-spacing:.02em;padding:6px 8px;border:1px solid var(--rule);
+            background:transparent;color:var(--ink-2);border-radius:2px;cursor:pointer;
+            transition:background .12s,color .12s,border-color .12s}
+.seg button:hover{border-color:var(--blue);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--on-accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.ghost{font-family:var(--cond);font-size:12px;font-weight:600;padding:6px 10px;
+       border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+       border-radius:2px;cursor:pointer}
+.ghost:hover{border-color:var(--blue);color:var(--ink)}
+
+/* ---------- plot ---------- */
+.plotwrap{position:relative;background:var(--panel);border:1px solid var(--rule);
+          border-radius:3px;box-shadow:var(--shadow);overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.plot-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
+           align-items:center;padding:10px 12px;border-bottom:1px solid var(--rule-2)}
+.hazard{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 12px;
+  border-bottom:1px solid var(--rule-2);font-family:var(--mono);font-size:15px;
+  color:var(--c0);background:color-mix(in srgb,var(--c0) 8%,transparent)}
+.hazard b{font-weight:600;font-size:16px;letter-spacing:.06em}
+.hazard.warning{color:var(--c1);background:color-mix(in srgb,var(--c1) 12%,transparent)}
+.hazard.critical{color:var(--c3);background:color-mix(in srgb,var(--c3) 12%,transparent)}
+.transport{display:flex;gap:6px;align-items:center}
+.frame-slider{flex:1 1 140px;min-width:100px}
+.readout{font-family:var(--mono);font-size:11px;color:var(--ink-3);
+         font-variant-numeric:tabular-nums}
+.motion{display:inline-flex;align-items:center;gap:5px;color:var(--blue)}
+.motion::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c0);
+                box-shadow:0 0 0 3px color-mix(in srgb,var(--c0) 18%,transparent)}
+.tip{position:absolute;pointer-events:none;background:var(--panel);
+     border:1px solid var(--blue);border-radius:2px;padding:7px 9px;
+     font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--ink);
+     box-shadow:0 4px 14px rgba(0,0,0,.14);max-width:230px;z-index:5}
+.tip b{color:var(--blue);font-weight:600}
+.scalebar{display:flex;align-items:center;gap:8px;padding:8px 12px;
+          border-top:1px solid var(--rule-2);font-family:var(--mono);font-size:11px;
+          color:var(--ink-3);flex-wrap:wrap}
+.ramp{height:9px;flex:1 1 120px;min-width:90px;border:1px solid var(--rule);border-radius:1px}
+
+/* ---------- telemetry ---------- */
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:12.5px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.big{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;
+     color:var(--blue);line-height:1.1;font-variant-numeric:tabular-nums}
+.big small{font-size:12px;color:var(--ink-3);font-weight:400;letter-spacing:0}
+
+.bars{display:grid;gap:5px;margin-top:4px}
+.bar{display:grid;grid-template-columns:52px 1fr 62px;gap:8px;align-items:center;
+     font-family:var(--mono);font-size:11px;color:var(--ink-2);
+     font-variant-numeric:tabular-nums}
+.track{height:8px;background:var(--rule-2);border-radius:1px;overflow:hidden}
+.fill{height:100%;background:var(--blue)}
+.bar .num{text-align:right;color:var(--ink)}
+
+.legend{display:grid;gap:6px;margin-top:2px}
+.lg{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2)}
+.sw{width:13px;height:13px;border-radius:2px;flex:none;border:1px solid rgba(0,0,0,.14)}
+
+/* ---------- report ---------- */
+.report{margin-top:26px;border-top:1.5px solid var(--ink);padding-top:20px}
+.report h2{font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:.1em;
+           text-transform:uppercase;margin:0 0 4px}
+.report .lede{color:var(--ink-2);margin:0 0 18px;max-width:72ch}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}
+.tbox h3{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.07em;
+         text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+.tbox p.note{font-size:12px;color:var(--ink-3);margin:8px 0 0;max-width:52ch}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;
+      font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--rule-2);
+      white-space:nowrap}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans)}
+thead th{font-family:var(--cond);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--ink-3);border-bottom:1px solid var(--rule)}
+tbody td{font-family:var(--mono)}
+tbody tr:hover{background:var(--paper-2)}
+.ok{color:var(--c0);font-weight:600}
+footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--rule);
+       font-size:12px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:12px;
+       justify-content:space-between}
+code{font-family:var(--mono);font-size:12px;background:var(--paper-2);
+     padding:1px 5px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<script id="avr-data" type="application/json">__AVR_DATA__</script>
+
+<div class="wrap">
+<header class="mast">
+  <div class="mast-row">
+    <div>
+      <h1>Adaptive Variable-Resolution 2.5D Lidar Mapping</h1>
+      <p class="sub">A foveated elevation map: 5&nbsp;cm cells where the vehicle is about to be,
+        80&nbsp;cm cells where it only needs situational awareness. Move the ring sliders and the
+        grid is rebuilt from the classified point cloud in front of you.</p>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </div>
+</header>
+
+<div class="deck">
+  <!-- ================= controls ================= -->
+  <div>
+    <div class="panel">
+      <p class="ptitle">Resolution schedule <span id="cellsizes"></span></p>
+      <div id="rings"></div>
+      <div class="field">
+        <label for="base">Base cell <span class="val" id="baseval"></span></label>
+        <input type="range" id="base" min="2" max="5" step="1" value="5">
+      </div>
+      <button class="ghost" id="reset" style="width:100%">Reset to design values</button>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Layer</p>
+      <div class="seg" id="layers"></div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">View <span class="mode-status" id="viewStatus"></span></p>
+      <div class="field">
+        <label for="zoom">Extent <span class="val" id="zoomval"></span></label>
+        <input type="range" id="zoom" min="12" max="100" step="2" value="30">
+      </div>
+      <div class="seg" style="margin-bottom:10px">
+        <button id="tRings" aria-pressed="true">Range rings</button>
+        <button id="tGrid" aria-pressed="false">Cell edges</button>
+        <button id="tAcc" aria-pressed="true">Accumulate scans</button>
+        <button id="tCity" aria-pressed="true">City view</button>
+        <button id="tZones" aria-pressed="false">Three-zone view</button>
+      </div>
+      <div class="field">
+        <label for="zoneMode">Zone mode <span class="val" id="zoneModeVal">All zones</span></label>
+        <select id="zoneMode" style="width:100%;padding:7px 8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);font:12px var(--cond);border-radius:2px">
+          <option value="all">All zones</option>
+          <option value="near">Near zone &lt;15 m</option>
+          <option value="transition">Transition zone 15-30 m</option>
+          <option value="25d">2.5D output</option>
+          <option value="custom">Manual combination</option>
+        </select>
+      </div>
+      <button class="ghost" id="clearPath" style="width:100%">Clear route</button>
+      <p style="font-size:12px;color:var(--ink-3);margin:9px 0 0">
+        Click the plot to drop a goal. The planner searches the 0.8&nbsp;m navigation
+        tiles, refusing steps above <span id="stepTxt"></span> and slopes above
+        <span id="slopeTxt"></span>.</p>
+    </div>
+  </div>
+
+  <!-- ================= plot ================= -->
+  <div>
+    <div class="plotwrap">
+      <div class="plot-head">
+        <div class="transport">
+          <button class="ghost" id="play">Play</button>
+          <button class="ghost" id="step">Step</button>
+          <input class="frame-slider" type="range" id="frame" min="0" max="0" value="0">
+        </div>
+        <div class="readout" id="framereadout"></div>
+      </div>
+      <div class="hazard" id="hazard" role="status" aria-live="polite">
+        <b>SCANNING</b><span>Forward hazard monitor active</span>
+      </div>
+      <canvas id="plot" width="900" height="900" aria-label="Bird's eye view of the 2.5D map"></canvas>
+      <div class="scalebar">
+        <span id="rampLo">—</span>
+        <div class="ramp" id="ramp"></div>
+        <span id="rampHi">—</span>
+        <span id="rampName" style="color:var(--ink-2)"></span>
+      </div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+  </div>
+
+  <!-- ================= telemetry ================= -->
+  <div>
+    <div class="panel">
+      <p class="ptitle">Map footprint</p>
+      <div class="big" id="memBig">—</div>
+      <div class="kv" style="margin-top:10px">
+        <dt>Occupied cells</dt><dd id="kCells">—</dd>
+        <dt>Uniform 5&nbsp;cm grid</dt><dd id="kUniform">—</dd>
+        <dt>Dense 3D voxels</dt><dd id="kVoxel">—</dd>
+        <dt>Saving</dt><dd id="kRatio" class="ok">—</dd>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Cells per level</p>
+      <div class="bars" id="levelbars"></div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Semantics <span id="backendTag"></span></p>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Frame cost <span>measured</span></p>
+      <div class="kv" id="timing"></div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Vehicle motion <span class="motion">LIVE LOG</span></p>
+      <div class="kv" id="motion"></div>
+    </div>
+
+    <div class="panel">
+      <p class="ptitle">Inference zones</p>
+      <div class="kv">
+        <dt>Near zone</dt><dd>&lt;15 m</dd>
+        <dt>Near representation</dt><dd>full 3D</dd>
+        <dt>Transition zone</dt><dd>15-30 m</dd>
+        <dt>Transition model</dt><dd>strong DL</dd>
+        <dt>Far representation</dt><dd>dense 2.5D</dd>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= report ================= -->
+<section class="report">
+  <h2>Measured on the held-out sequence</h2>
+  <p class="lede" id="reportLede"></p>
+  <div class="tables">
+    <div class="tbox">
+      <h3>Classification by range</h3>
+      <div class="scroll"><table id="tBand"></table></div>
+      <p class="note">Accuracy holds past 70&nbsp;m because obstacles stay separable there;
+        what degrades is the terrain split, which needs resolution the far field no longer has.</p>
+    </div>
+    <div class="tbox">
+      <h3>Elevation error vs ground truth</h3>
+      <div class="scroll"><table id="tElev"></table></div>
+      <p class="note">This is the trade the whole design makes: millimetres of height error
+        in the near field, decimetres at 100&nbsp;m, for a map two orders of magnitude smaller.</p>
+    </div>
+    <div class="tbox">
+      <h3>Per-class agreement</h3>
+      <div class="scroll"><table id="tClass"></table></div>
+      <p class="note">Pedestrians are the hard class: their legs sit inside the same
+        20&nbsp;cm of height as the road they stand on.</p>
+    </div>
+    <div class="tbox">
+      <h3>Structural invariants</h3>
+      <div class="scroll"><table id="tIntegrity"></table></div>
+      <p class="note">The quadtree audit that replaces the usual hand-waving about
+        alignment: every point lands in exactly one leaf, and no patch of ground is
+        stored twice at two resolutions.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Built from the <code>avr25d</code> package — simulator, segmentation network,
+    grid engine and planner all run the same code that produced these figures.</span>
+  <span id="footStamp"></span>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const DATA = JSON.parse(document.getElementById("avr-data").textContent);
+const META = DATA.meta, BENCH = DATA.benchmark, FRAMES = DATA.frames;
+
+/* ---------- decoding ---------- */
+function decode(b64, Ctor){
+  const bin = atob(b64), n = bin.length, u8 = new Uint8Array(n);
+  for(let i=0;i<n;i++) u8[i] = bin.charCodeAt(i);
+  return new Ctor(u8.buffer);
+}
+const CACHE = new Map();
+function frameData(i){
+  if(CACHE.has(i)) return CACHE.get(i);
+  const f = FRAMES[i];
+  const d = {
+    x: decode(f.x, Int16Array), y: decode(f.y, Int16Array),
+    z: decode(f.z, Int16Array), label: decode(f.label, Int8Array),
+    meta: f
+  };
+  CACHE.set(i, d);
+  return d;
+}
+
+/* transform an earlier scan into the current scan's sensor frame, so the
+   browser can accumulate the map exactly as the Python pipeline does */
+const XCACHE = new Map();
+function pointsIn(i, ref){
+  if(i === ref) return frameData(i);
+  const k = i + ":" + ref;
+  if(XCACHE.has(k)) return XCACHE.get(k);
+  const f = FRAMES[i], c = FRAMES[ref], d = frameData(i);
+  const cf = Math.cos(f.yaw), sf = Math.sin(f.yaw);
+  const cc = Math.cos(-c.yaw), sc = Math.sin(-c.yaw);
+  const ox = f.sensor[0]-c.sensor[0], oy = f.sensor[1]-c.sensor[1], oz = f.sensor[2]-c.sensor[2];
+  const n = d.x.length, X = new Int16Array(n), Y = new Int16Array(n), Z = new Int16Array(n);
+  for(let t=0;t<n;t++){
+    const px = d.x[t]/100, py = d.y[t]/100;
+    const wx = cf*px - sf*py + ox, wy = sf*px + cf*py + oy;
+    X[t] = Math.round((cc*wx - sc*wy)*100);
+    Y[t] = Math.round((sc*wx + cc*wy)*100);
+    Z[t] = d.z[t] + Math.round(oz*100);
+  }
+  const out = {x:X, y:Y, z:Z, label:d.label, meta:f};
+  XCACHE.set(k, out);
+  return out;
+}
+
+/* ---------- state ---------- */
+const S = {
+  frame: 0,
+  playing: false,
+  baseLevel: 5,                      // base cell = 0.05 * 2^(5-5) ... index into CELLS
+  rings: META.ring_radii.slice(),
+  base: META.base_cell,
+  layer: "elevation",
+  extent: 30,
+  accumulate: true,
+  showRings: true,
+  showEdges: false,
+  showReturns: true,
+  cityView: true,
+  nearView: false,
+  showZones: false,
+  output25d: false,
+  transitionView: false,
+  goal: null,
+  path: null
+};
+const BASE_CHOICES = [0.4, 0.2, 0.1, 0.05];   // slider 2..5
+
+function syncViewStatus(){
+  document.getElementById("viewStatus").textContent =
+    "CITY " + (S.cityView ? "ON" : "OFF") + " · NEAR " + (S.nearView ? "ON" : "OFF") +
+    " · ZONES " + (S.showZones ? "ON" : "OFF") +
+    " · 2.5D " + (S.output25d ? "ON" : "OFF") +
+    " · TRANSITION " + (S.transitionView ? "ON" : "OFF");
+  const mode = document.getElementById("zoneMode");
+  const selected = S.output25d ? "25d" : S.transitionView ? "transition" :
+    S.nearView ? "near" : S.showZones && !S.cityView ? "all" : "custom";
+  mode.value = selected;
+  document.getElementById("zoneModeVal").textContent = mode.options[mode.selectedIndex].text;
+}
+
+function applyZoneMode(mode){
+  S.cityView = false;
+  S.nearView = false;
+  S.showZones = false;
+  S.output25d = false;
+  S.transitionView = false;
+  if(mode === "all") S.showZones = true;
+  if(mode === "near"){ S.cityView = true; S.nearView = true; }
+  if(mode === "transition") S.transitionView = true;
+  if(mode === "25d") S.output25d = true;
+  document.getElementById("tCity").setAttribute("aria-pressed", String(S.cityView));
+  document.getElementById("tZones").setAttribute("aria-pressed", String(S.showZones));
+  syncViewStatus();
+  draw();
+}
+
+/* ---------- colour ---------- */
+const CLASS_COLORS = ["--c0","--c1","--c2","--c3"].map(v =>
+  getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+function cssvar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+
+// hypsometric ramp: the cartographic convention for elevation
+const HYPSO = [[0,[31,68,92]],[0.22,[44,118,110]],[0.45,[133,161,106]],
+               [0.68,[208,183,125]],[0.86,[199,138,79]],[1,[243,239,230]]];
+function ramp(t, stops){
+  t = Math.max(0, Math.min(1, t));
+  for(let i=1;i<stops.length;i++){
+    if(t <= stops[i][0]){
+      const a = stops[i-1], b = stops[i];
+      const u = (t - a[0]) / Math.max(b[0]-a[0], 1e-6);
+      return [0,1,2].map(k => Math.round(a[1][k] + u*(b[1][k]-a[1][k])));
+    }
+  }
+  return stops[stops.length-1][1];
+}
+const TRAV = [[0,[176,62,45]],[0.5,[199,138,43]],[1,[46,125,107]]];
+const LODC = [[46,92,140],[63,130,160],[120,160,150],[190,170,120],[200,130,90]];
+function rgb(c){return "rgb("+c[0]+","+c[1]+","+c[2]+")";}
+
+/* ---------- the variable-resolution grid, rebuilt in the browser ---------- */
+function leafLevel(x, y, base, rings, nLevels){
+  for(let L=nLevels-1; L>=1; L--){
+    const r = base * (1 << L);
+    const x0 = Math.floor(x/r)*r, y0 = Math.floor(y/r)*r;
+    const dx = Math.max(x0, -(x0+r), 0), dy = Math.max(y0, -(y0+r), 0);
+    if(Math.sqrt(dx*dx + dy*dy) >= rings[L]) return L;
+  }
+  return 0;
+}
+
+function buildGrid(scans){
+  const base = S.base, rings = S.rings, nL = META.n_levels;
+  const maxR = META.max_range;
+  const cells = new Map();
+  const perLevel = new Int32Array(nL);
+  let total = 0;
+
+  for(const fd of scans){
+  const {x, y, z, label} = fd;
+  const n = x.length;
+  total += n;
+  for(let i=0;i<n;i++){
+    const px = x[i]/100, py = y[i]/100, pz = z[i]/100;
+    if(Math.abs(px) > maxR || Math.abs(py) > maxR) continue;
+    const L = leafLevel(px, py, base, rings, nL);
+    const r = base * (1 << L);
+    const ix = Math.floor(px/r), iy = Math.floor(py/r);
+    const key = L * 4398046511104 + (ix + 65536) * 2097152 + (iy + 65536);
+    let c = cells.get(key);
+    if(c === undefined){
+      c = {L:L, r:r, cx:(ix+0.5)*r, cy:(iy+0.5)*r, n:0, zs:0,
+           zmin:Infinity, zmax:-Infinity, k:[0,0,0,0], g:0, gz:0};
+      cells.set(key, c);
+      perLevel[L]++;
+    }
+    const cl = label[i];
+    c.n++; c.k[cl]++;
+    if(pz < c.zmin) c.zmin = pz;
+    if(pz > c.zmax) c.zmax = pz;
+    if(cl <= 1){ c.g++; c.gz += pz; }
+    c.zs += pz;
+  }
+  }
+
+  const arr = new Array(cells.size);
+  let i = 0;
+  for(const c of cells.values()){
+    c.z = c.g > 0 ? c.gz/c.g : c.zs/c.n;
+    let best = 0;
+    for(let k=1;k<4;k++) if(c.k[k] > c.k[best]) best = k;
+    c.cls = best;
+    c.relief = c.g > 0 ? (c.zmax - c.zmin) : 0;
+    arr[i++] = c;
+  }
+  return {cells: arr, perLevel: perLevel, map: cells, points: total};
+}
+
+/* ---------- navigation tiles + reachability ---------- */
+function buildNav(cells){
+  const t = META.nav_cell, maxStep = META.max_step_height;
+  const tiles = new Map();
+  const tkey = (ix, iy) => (ix + 65536) * 2097152 + (iy + 65536);
+
+  for(const c of cells){
+    const solid = c.cls >= 2;
+    const ground = !solid && c.relief <= maxStep;
+    const f = Math.max(1, Math.round(c.r / t));
+    const ix0 = Math.floor((c.cx - c.r/2 + 1e-6)/t), iy0 = Math.floor((c.cy - c.r/2 + 1e-6)/t);
+    for(let a=0;a<f;a++) for(let b=0;b<f;b++){
+      const ix = (f === 1 ? Math.floor(c.cx/t) : ix0 + a);
+      const iy = (f === 1 ? Math.floor(c.cy/t) : iy0 + b);
+      const k = tkey(ix, iy);
+      let q = tiles.get(k);
+      if(q === undefined){
+        q = {ix:ix, iy:iy, cx:(ix+0.5)*t, cy:(iy+0.5)*t,
+             zmin:Infinity, zmax:-Infinity, zs:0, ng:0, blocked:false};
+        tiles.set(k, q);
+      }
+      if(solid) q.blocked = true;
+      if(ground){
+        q.ng++; q.zs += c.z;
+        if(c.z < q.zmin) q.zmin = c.z;
+        if(c.z > q.zmax) q.zmax = c.z;
+      }
+    }
+  }
+
+  const list = [...tiles.values()];
+  const index = new Map();
+  list.forEach((q, i) => {
+    index.set(tkey(q.ix, q.iy), i);
+    q.z = q.ng ? q.zs/q.ng : NaN;
+    q.relief = q.ng ? q.zmax - q.zmin : 0;
+    q.passable = q.ng > 0 && !q.blocked && q.relief <= maxStep;
+  });
+
+  // neighbour probing across the radial sampling gaps
+  const DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+  const maxSlope = META.max_slope_deg, maxStep2 = maxStep;
+  list.forEach(q => {
+    q.nb = [-1,-1,-1,-1]; q.nd = [0,0,0,0]; q.slope = 0;
+    for(let d=0; d<4; d++){
+      for(let s=1; s<=10; s++){
+        const j = index.get(tkey(q.ix + DIRS[d][0]*s, q.iy + DIRS[d][1]*s));
+        if(j !== undefined){ q.nb[d] = j; q.nd[d] = s*META.nav_cell; break; }
+      }
+    }
+  });
+  list.forEach(q => {
+    for(let d=0; d<4; d++){
+      const j = q.nb[d];
+      if(j < 0) continue;
+      const o = list[j];
+      if(!(q.ng > 0 && o.ng > 0)) continue;
+      const dz = Math.abs(q.z - o.z);
+      q.slope = Math.max(q.slope, Math.atan2(dz, Math.max(q.nd[d],1e-3)) * 180/Math.PI);
+    }
+    q.passable = q.passable && q.slope <= maxSlope;
+  });
+
+  // Reachability: label the components, then keep the one that dominates
+  // the vehicle's surroundings.  Seeding from whatever tile happens to be
+  // nearest picks the kerb as often as the road.  Links are only followed
+  // between adjacent tiles: a longer link spans ground nobody observed, and
+  // a kerb crossed obliquely over 3 m looks like a 2 deg ramp.
+  const comp = new Int32Array(list.length).fill(-1);
+  let nc = 0;
+  const maxLink = 2 * META.nav_cell + 1e-6;
+  for(let i=0;i<list.length;i++){
+    if(comp[i] >= 0 || !list[i].passable) continue;
+    const stack = [i]; comp[i] = nc;
+    while(stack.length){
+      const a = stack.pop(), q = list[a];
+      for(let d=0; d<4; d++){
+        const j = q.nb[d];
+        if(j < 0 || comp[j] >= 0) continue;
+        const o = list[j];
+        if(!o.passable || q.nd[d] > maxLink) continue;
+        if(Math.abs(o.z - q.z) > maxStep2) continue;
+        comp[j] = nc; stack.push(j);
+      }
+    }
+    nc++;
+  }
+  const votes = new Int32Array(nc);
+  list.forEach((q,i) => {
+    if(comp[i] >= 0 && Math.hypot(q.cx, q.cy) < 14.0) votes[comp[i]]++;
+  });
+  let win = -1, bestv = 0;
+  for(let c=0;c<nc;c++) if(votes[c] > bestv){ bestv = votes[c]; win = c; }
+  list.forEach((q,i) => { q.reach = comp[i] === win && q.passable; });
+  return {list: list, index: index, key: tkey};
+}
+
+/* ---------- A* over the navigation tiles ---------- */
+function planRoute(nav, goal){
+  const list = nav.list;
+  const usable = i => list[i].passable && list[i].reach;
+  let start = -1, best = Infinity, gi = -1, gbest = Infinity;
+  list.forEach((q,i) => {
+    if(!usable(i)) return;
+    const d0 = q.cx*q.cx + q.cy*q.cy;
+    if(d0 < best){ best = d0; start = i; }
+    const dg = (q.cx-goal[0])**2 + (q.cy-goal[1])**2;
+    if(dg < gbest){ gbest = dg; gi = i; }
+  });
+  if(start < 0 || gi < 0) return null;
+
+  const N = list.length;
+  const g = new Float64Array(N).fill(Infinity);
+  const came = new Int32Array(N).fill(-1);
+  const done = new Uint8Array(N);
+  g[start] = 0;
+  const open = [[0, start]];
+  const maxStep = META.max_step_height, maxSlope = META.max_slope_deg;
+
+  while(open.length){
+    open.sort((a,b)=>b[0]-a[0]);
+    const [, cur] = open.pop();
+    if(done[cur]) continue;
+    done[cur] = 1;
+    if(cur === gi) break;
+    const q = list[cur];
+    for(let d=0; d<4; d++){
+      const j = q.nb[d];
+      if(j < 0 || done[j] || !usable(j)) continue;
+      const o = list[j];
+      const dz = Math.abs(o.z - q.z);
+      if(dz > maxStep) continue;
+      const rough = Math.min(1, o.slope / maxSlope);
+      const cost = q.nd[d] * (1 + 2.5*rough) + 6*dz;
+      if(g[cur] + cost < g[j]){
+        g[j] = g[cur] + cost;
+        came[j] = cur;
+        open.push([g[j] + Math.hypot(o.cx-goal[0], o.cy-goal[1]), j]);
+      }
+    }
+  }
+  if(!isFinite(g[gi])) return null;
+  const path = [];
+  for(let k = gi; k >= 0; k = came[k]) path.push(list[k]);
+  path.reverse();
+  return path;
+}
+
+/* ---------- rendering ---------- */
+const canvas = document.getElementById("plot");
+const ctx = canvas.getContext("2d");
+let VIEW = {scale:1, size:900};
+
+function fitCanvas(){
+  const w = canvas.parentElement.clientWidth;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const px = Math.max(320, Math.round(w));
+  canvas.style.height = px + "px";
+  canvas.width = Math.round(px * dpr);
+  canvas.height = Math.round(px * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  VIEW.size = px;
+}
+
+function project(x, y){
+  const s = VIEW.size / (2 * S.extent);
+  return [VIEW.size/2 + x*s, VIEW.size/2 - y*s];
+}
+
+let GRID = null, NAV = null;
+const HAZARD = {level:"clear", distance:Infinity};
+
+function nearestObstacle(i){
+  const d = frameData(i), maxForward = 24, laneHalfWidth = 2.2;
+  let nearest = Infinity, label = -1;
+  for(let p=0;p<d.x.length;p++){
+    const x = d.x[p] / 100, y = d.y[p] / 100;
+    if(d.label[p] < 2 || x < 0 || x > maxForward || Math.abs(y) > laneHalfWidth) continue;
+    const distance = Math.hypot(x, y);
+    if(distance < nearest){ nearest = distance; label = d.label[p]; }
+  }
+  return {distance: nearest, label: label};
+}
+
+function updateHazard(){
+  const current = nearestObstacle(S.frame);
+  const previous = S.frame > 0 ? nearestObstacle(S.frame - 1) : current;
+  const closing = previous.distance - current.distance > 0.05;
+  let level = "clear";
+  if(current.distance <= 4) level = "critical";
+  else if(current.distance <= 8) level = "warning";
+  const el = document.getElementById("hazard");
+  el.className = "hazard " + level;
+  if(level === "clear"){
+    el.innerHTML = "<b>CLEAR</b><span>No obstacle in the forward lane</span>";
+  } else {
+    const kind = META.class_names[current.label].replace(/_/g," ");
+    const trend = closing ? " · closing" : " · detected ahead";
+    el.innerHTML = "<b>" + level.toUpperCase() + "</b><span>" + kind +
+      " at " + current.distance.toFixed(1) + " m" + trend + "</span>";
+  }
+  HAZARD.level = level;
+  HAZARD.distance = current.distance;
+}
+
+function cellColour(c, zlo, zhi){
+  switch(S.layer){
+    case "class":  return CLASS_COLORS[c.cls];
+    case "lod":    return rgb(LODC[c.L]);
+    case "relief": return rgb(ramp(Math.min(1, c.relief/0.35), HYPSO));
+    case "trav": {
+      if(c.cls >= 2) return rgb([150,60,48]);
+      const t = c.tile;
+      if(!t || !t.passable) return rgb([176,62,45]);
+      if(!t.reach) return rgb([150,130,90]);
+      return rgb(ramp(1 - Math.min(1, t.slope/META.max_slope_deg), TRAV));
+    }
+    default:       return rgb(ramp((c.z - zlo)/Math.max(zhi-zlo, 1e-3), HYPSO));
+  }
+}
+
+function drawCityView(){
+  fitCanvas();
+  const size = VIEW.size, horizon = size * 0.37;
+  const raw = frameData(S.frame);
+  const viewRange = S.nearView ? META.near_zone_radius : META.max_range;
+  const focal = size * 0.78;
+  ctx.fillStyle = cssvar("--panel");
+  ctx.fillRect(0, 0, size, size);
+
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, cssvar("--blue-soft"));
+  sky.addColorStop(1, cssvar("--panel"));
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, size, horizon);
+  ctx.fillStyle = cssvar("--paper-2");
+  ctx.fillRect(0, horizon, size, size - horizon);
+
+  const current = FRAMES[S.frame];
+  const cityObjects = current.city || [];
+  const yaw = current.yaw, cy = Math.cos(-yaw), sy = Math.sin(-yaw);
+  const ox = current.sensor[0], oy = current.sensor[1], oz = current.sensor[2];
+  const cityProject = (x, y, z) => {
+    const dx = x - ox, dy = y - oy;
+    const forward = cy * dx - sy * dy;
+    const lateral = sy * dx + cy * dy;
+    if(forward < 1 || forward > viewRange) return null;
+    const scale = focal / forward;
+    return [size/2 - lateral * scale, horizon - (z - oz) * scale];
+  };
+  for(const object of cityObjects){
+    const p = object.params, corners = [];
+    if(object.kind === 0){
+      for(const x of [p[0], p[3]]) for(const y of [p[1], p[4]])
+        for(const z of [p[2], p[5]]) corners.push(cityProject(x, y, z));
+    } else if(object.kind === 1){
+      for(const z of [p[2], p[4]]) corners.push(cityProject(p[0], p[1], z));
+    } else {
+      corners.push(cityProject(p[0], p[1], p[2] - p[3]));
+      corners.push(cityProject(p[0], p[1], p[2] + p[3]));
+    }
+    const visible = corners.filter(Boolean);
+    if(!visible.length) continue;
+    const xs = visible.map(v => v[0]), ys = visible.map(v => v[1]);
+    const left = Math.min(...xs), right = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
+    const color = CLASS_COLORS[object.label] || cssvar("--ink-3");
+    ctx.fillStyle = color; ctx.globalAlpha = object.label >= 3 ? 0.55 : 0.24;
+    ctx.fillRect(left, top, Math.max(2, right-left), Math.max(2, bottom-top));
+    ctx.strokeStyle = color; ctx.globalAlpha = 0.75; ctx.lineWidth = 1;
+    ctx.strokeRect(left, top, Math.max(2, right-left), Math.max(2, bottom-top));
+  }
+  ctx.globalAlpha = 1;
+
+  // Project the current scan forward so height and distance read as a city view.
+  for(let i=0;i<raw.x.length;i++){
+    const x = raw.x[i] / 100, y = raw.y[i] / 100, z = raw.z[i] / 100;
+    if(x < 1.0 || x > viewRange || Math.abs(y) > viewRange) continue;
+    const scale = focal / x;
+    const px = size/2 - y * scale;
+    const py = horizon - z * scale;
+    if(px < 0 || px > size || py < 0 || py > size) continue;
+    ctx.globalAlpha = Math.max(0.16, 1 - x / (viewRange * 1.15));
+    ctx.fillStyle = CLASS_COLORS[raw.label[i]] || cssvar("--ink-3");
+    const point = Math.max(1, Math.min(4, scale * 0.018));
+    ctx.fillRect(px, py, point, point);
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = cssvar("--grid-ink");
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath(); ctx.moveTo(0, horizon); ctx.lineTo(size, horizon); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = cssvar("--ink-2");
+  ctx.font = "600 12px IBM Plex Mono, monospace";
+  ctx.fillText((S.nearView ? "NEAR ZONE · " : "CITY VIEW · ") + "CURRENT LIDAR SCAN", 14, 22);
+  ctx.font = "500 11px IBM Plex Mono, monospace";
+  ctx.fillText("forward perspective · " + viewRange.toFixed(0) + " m · " +
+               raw.x.length.toLocaleString() + " returns", 14, 40);
+  document.getElementById("rampName").textContent = "current lidar returns · perspective";
+  document.getElementById("rampLo").textContent = "near";
+  document.getElementById("rampHi").textContent = viewRange.toFixed(0) + " m";
+}
+
+function draw(){
+  if(!GRID) return;
+  if(S.cityView){ drawCityView(); return; }
+  fitCanvas();
+  const size = VIEW.size, s = size/(2*S.extent);
+  ctx.fillStyle = cssvar("--panel");
+  ctx.fillRect(0, 0, size, size);
+
+  const cells = GRID.cells;
+  // elevation range over the visible cells only, so the ramp always uses its full span
+  const zvals = [];
+  for(const c of cells){
+    if(Math.abs(c.cx) > S.extent || Math.abs(c.cy) > S.extent) continue;
+    if(c.cls <= 1) zvals.push(c.z);
+  }
+
+  // Raw returns keep the display grounded in what the spinning sensor sees.
+  // They sit above the fused cells, but below navigation and vehicle overlays.
+  if(S.showReturns){
+    const raw = frameData(S.frame), f = FRAMES[S.frame];
+    ctx.save();
+    ctx.globalAlpha = 0.34;
+    for(let i=0;i<raw.x.length;i++){
+      const [px, py] = project(raw.x[i]/100, raw.y[i]/100);
+      if(px < 0 || px > size || py < 0 || py > size) continue;
+      ctx.fillStyle = CLASS_COLORS[raw.label[i]] || cssvar("--ink-3");
+      ctx.fillRect(px, py, 1.7, 1.7);
+    }
+    ctx.restore();
+  }
+  let zlo = -2, zhi = 2;
+  if(zvals.length > 8){
+    zvals.sort((a,b)=>a-b);
+    zlo = zvals[Math.floor(zvals.length*0.02)];
+    zhi = zvals[Math.floor(zvals.length*0.98)];
+    if(zhi - zlo < 0.25){ const m=(zhi+zlo)/2; zlo=m-0.125; zhi=m+0.125; }
+  }
+
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = cssvar("--rule-2");
+  for(const c of cells){
+    const half = c.r/2;
+    if(c.cx + half < -S.extent || c.cx - half > S.extent ||
+       c.cy + half < -S.extent || c.cy - half > S.extent) continue;
+    const [sx, sy] = project(c.cx - half, c.cy + half);
+    const w = Math.max(c.r * s, 1);
+    ctx.fillStyle = cellColour(c, zlo, zhi);
+    ctx.fillRect(sx, sy, w, w);
+    if(S.showEdges && w > 3) ctx.strokeRect(sx, sy, w, w);
+  }
+
+  // range rings mark where the resolution changes
+  if(S.showRings){
+    ctx.save();
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 1;
+    for(let L=1; L<META.n_levels; L++){
+      const r = S.rings[L];
+      if(r <= 0 || r > S.extent*1.45) continue;
+      ctx.strokeStyle = cssvar("--grid-ink");
+      ctx.beginPath();
+      ctx.arc(size/2, size/2, r*s, 0, Math.PI*2);
+      ctx.stroke();
+      const [lx, ly] = project(0, r);
+      ctx.setLineDash([]);
+      ctx.font = "500 11px " + "IBM Plex Mono, monospace";
+      ctx.fillStyle = cssvar("--ink-3");
+      ctx.textAlign = "center";
+      ctx.fillText((S.base*(1<<L)*100).toFixed(0) + " cm  ·  " + r.toFixed(0) + " m",
+                   lx, ly - 5);
+      ctx.setLineDash([5, 4]);
+    }
+    ctx.restore();
+  }
+
+  // Manual zone overlay makes the three inference regimes visible at a glance.
+  if(S.showZones || S.transitionView){
+    ctx.save();
+    const center = size / 2;
+    const nearR = Math.min(15, S.extent) * s;
+    const transitionR = Math.min(30, S.extent) * s;
+    const edgeR = Math.sqrt(2) * center;
+    const zones = [
+      {inner: 0, outer: nearR, fill: S.transitionView ? "rgba(46,160,132,.05)" : "rgba(46,160,132,.18)", stroke: "--c0", label: "FULL 3D  <15 m"},
+      {inner: nearR, outer: transitionR, fill: S.transitionView ? "rgba(214,158,46,.28)" : "rgba(214,158,46,.16)", stroke: "--c1", label: "STRONG DL  15-30 m"},
+      {inner: transitionR, outer: edgeR, fill: S.transitionView ? "rgba(120,132,168,.05)" : "rgba(120,132,168,.14)", stroke: "--c2", label: "DENSE 2.5D  >30 m"}
+    ];
+    for(const zone of zones){
+      ctx.beginPath();
+      ctx.arc(center, center, zone.outer, 0, Math.PI * 2);
+      if(zone.inner > 0){
+        ctx.arc(center, center, zone.inner, Math.PI * 2, 0, true);
+      }
+      ctx.closePath();
+      ctx.fillStyle = zone.fill; ctx.fill();
+      ctx.strokeStyle = cssvar(zone.stroke); ctx.lineWidth = 2;
+      ctx.setLineDash([]); ctx.stroke();
+    }
+    ctx.font = "600 11px IBM Plex Mono, monospace";
+    ctx.textAlign = "left";
+    ctx.fillStyle = cssvar("--c0"); ctx.fillText(zones[0].label, 12, 20);
+    ctx.fillStyle = cssvar("--c1"); ctx.fillText(zones[1].label, 12, 38);
+    ctx.fillStyle = cssvar("--c2"); ctx.fillText(zones[2].label, 12, 56);
+    ctx.restore();
+  }
+
+  // planned route
+  if(S.path && S.path.length > 1){
+    ctx.save();
+    ctx.lineWidth = 3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.strokeStyle = cssvar("--oxide");
+    ctx.beginPath();
+    S.path.forEach((q, i) => {
+      const [px, py] = project(q.cx, q.cy);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    });
+    ctx.stroke();
+    const [gx, gy] = project(S.path[S.path.length-1].cx, S.path[S.path.length-1].cy);
+    ctx.fillStyle = cssvar("--oxide");
+    ctx.beginPath(); ctx.arc(gx, gy, 5, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  // the sensor's blind cone: a 64-beam head mounted at 1.73 m cannot see
+  // the ground closer than ~3.7 m, so that disc is genuinely unmapped
+  const blind = 3.7 * s;
+  ctx.save();
+  ctx.translate(size/2, size/2);
+  ctx.beginPath(); ctx.arc(0, 0, blind, 0, Math.PI*2);
+  ctx.fillStyle = cssvar("--paper-2"); ctx.fill();
+  ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+  ctx.strokeStyle = cssvar("--grid-ink"); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // the vehicle, drawn to its real 4.4 x 1.9 m footprint
+  const L = 4.4*s, W = 1.9*s;
+  ctx.rotate(-Math.PI/2);
+  ctx.fillStyle = cssvar("--blue");
+  ctx.strokeStyle = cssvar("--panel"); ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const rr = Math.min(3, W/3);
+  ctx.moveTo(-L/2+rr, -W/2);
+  ctx.lineTo(L/2-rr, -W/2); ctx.quadraticCurveTo(L/2, -W/2, L/2, -W/2+rr);
+  ctx.lineTo(L/2, W/2-rr); ctx.quadraticCurveTo(L/2, W/2, L/2-rr, W/2);
+  ctx.lineTo(-L/2+rr, W/2); ctx.quadraticCurveTo(-L/2, W/2, -L/2, W/2-rr);
+  ctx.lineTo(-L/2, -W/2+rr); ctx.quadraticCurveTo(-L/2, -W/2, -L/2+rr, -W/2);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  if(blind > 26){
+    ctx.font = "500 10px IBM Plex Mono, monospace";
+    ctx.fillStyle = cssvar("--ink-3"); ctx.textAlign = "center";
+    ctx.fillText("blind cone", 0, blind - 6);
+  }
+  ctx.restore();
+
+  // Vehicle motion and the spinning head: forward is +x in the sensor frame.
+  const f = FRAMES[S.frame];
+  ctx.save();
+  ctx.translate(size/2, size/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.strokeStyle = cssvar("--blue");
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, -W/2 - 8);
+  ctx.lineTo(0, -Math.min(blind + 16, size/2 - 8));
+  ctx.stroke();
+  ctx.globalAlpha = 0.12;
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.arc(0, 0, Math.min(size/2, 15*s), -Math.PI/2, -Math.PI/2 + Math.PI/3);
+  ctx.closePath(); ctx.fillStyle = cssvar("--blue"); ctx.fill();
+  ctx.restore();
+
+  // The scan trail is deliberately short: it reads as vehicle motion, not a
+  // second map, and remains meaningful when accumulation is disabled.
+  if(S.frame > 0){
+    ctx.save();
+    ctx.strokeStyle = cssvar("--oxide"); ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    const first = Math.max(0, S.frame - 5);
+    for(let i=first;i<=S.frame;i++){
+      const f0 = FRAMES[i], fc = FRAMES[S.frame];
+      const dx = f0.sensor[0] - fc.sensor[0], dy = f0.sensor[1] - fc.sensor[1];
+      const cy = Math.cos(-fc.yaw), sy = Math.sin(-fc.yaw);
+      const [tx, ty] = project(cy*dx - sy*dy, sy*dx + cy*dy);
+      i === first ? ctx.moveTo(tx, ty) : ctx.lineTo(tx, ty);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  updateRamp(zlo, zhi);
+}
+
+function updateRamp(zlo, zhi){
+  const el = document.getElementById("ramp");
+  const lo = document.getElementById("rampLo"), hi = document.getElementById("rampHi");
+  const nm = document.getElementById("rampName");
+  let stops = HYPSO, a = zlo.toFixed(2)+" m", b = zhi.toFixed(2)+" m", name = "elevation (sensor frame)";
+  if(S.layer === "trav"){ stops = TRAV; a = "impassable"; b = "clear"; name = "traversability"; }
+  else if(S.layer === "class"){ a = ""; b = ""; name = "semantic class — see legend"; }
+  else if(S.layer === "lod"){ a = (S.base*100).toFixed(0)+" cm"; b = (S.base*(1<<(META.n_levels-1))*100).toFixed(0)+" cm"; name = "cell size"; }
+  else if(S.layer === "relief"){ a = "0 m"; b = "0.35 m"; name = "in-cell relief — the curb detector"; }
+  lo.textContent = a; hi.textContent = b; nm.textContent = name;
+  if(S.layer === "class"){
+    el.style.background = "linear-gradient(90deg," + CLASS_COLORS.join(",") + ")";
+  } else if(S.layer === "lod"){
+    el.style.background = "linear-gradient(90deg," + LODC.map(rgb).join(",") + ")";
+  } else {
+    const g = stops.map(s => rgb(s[1]) + " " + (s[0]*100).toFixed(0) + "%").join(",");
+    el.style.background = "linear-gradient(90deg," + g + ")";
+  }
+}
+
+/* ---------- recompute ---------- */
+function recompute(){
+  const t0 = performance.now();
+  const scans = [];
+  if(S.accumulate){ for(let i=0;i<=S.frame;i++) scans.push(pointsIn(i, S.frame)); }
+  else scans.push(frameData(S.frame));
+  GRID = buildGrid(scans);
+  NAV = buildNav(GRID.cells);
+  // attach tiles to cells for the traversability layer
+  const t = META.nav_cell;
+  for(const c of GRID.cells){
+    const i = NAV.index.get(NAV.key(Math.floor(c.cx/t), Math.floor(c.cy/t)));
+    c.tile = i === undefined ? null : NAV.list[i];
+  }
+  S.path = S.goal ? planRoute(NAV, S.goal) : null;
+  const ms = performance.now() - t0;
+  draw();
+  updateTelemetry(ms);
+}
+
+/* ---------- telemetry ---------- */
+function fmtBytes(b){
+  if(b >= 1e9) return (b/1e9).toFixed(2) + " GB";
+  if(b >= 1e6) return (b/1e6).toFixed(2) + " MB";
+  if(b >= 1e3) return (b/1e3).toFixed(1) + " kB";
+  return b.toFixed(0) + " B";
+}
+
+function updateTelemetry(rebuildMs){
+  const cells = GRID.cells.length;
+  const bytes = cells * META.bytes_per_cell;
+  const side = Math.round(2*META.max_range / S.base);
+  const uniform = side * side * META.bytes_per_cell;
+  const voxel = side * side * Math.round(20/S.base) / 8;
+
+  document.getElementById("memBig").innerHTML =
+    fmtBytes(bytes) + ' <small>held by the adaptive map</small>';
+  document.getElementById("kCells").textContent = cells.toLocaleString();
+  document.getElementById("kUniform").textContent = fmtBytes(uniform);
+  document.getElementById("kVoxel").textContent = fmtBytes(voxel);
+  document.getElementById("kRatio").textContent = (uniform/bytes).toFixed(0) + "× smaller";
+
+  const bars = document.getElementById("levelbars");
+  const maxc = Math.max(...GRID.perLevel, 1);
+  bars.innerHTML = "";
+  for(let L=0; L<META.n_levels; L++){
+    const row = document.createElement("div");
+    row.className = "bar";
+    const pct = 100 * GRID.perLevel[L] / maxc;
+    row.innerHTML = '<span>' + (S.base*(1<<L)*100).toFixed(0) + ' cm</span>' +
+      '<span class="track"><span class="fill" style="width:' + pct.toFixed(1) +
+      '%;background:' + rgb(LODC[L]) + '"></span></span>' +
+      '<span class="num">' + GRID.perLevel[L].toLocaleString() + '</span>';
+    bars.appendChild(row);
+  }
+
+  const counts = [0,0,0,0];
+  for(const c of GRID.cells) counts[c.cls]++;
+  const lg = document.getElementById("legend");
+  lg.innerHTML = "";
+  META.class_names.forEach((nm, i) => {
+    const d = document.createElement("div");
+    d.className = "lg";
+    d.innerHTML = '<span class="sw" style="background:' + CLASS_COLORS[i] + '"></span>' +
+      '<span style="flex:1">' + nm.replace(/_/g," ") + '</span>' +
+      '<span style="font-family:var(--mono);color:var(--ink)">' +
+      (100*counts[i]/Math.max(1,GRID.cells.length)).toFixed(1) + '%</span>';
+    lg.appendChild(d);
+  });
+
+  const f = FRAMES[S.frame];
+  updateHazard();
+  const tm = f.timing;
+  const rows = [
+    ["Features", tm.features_ms], ["Segmentation", tm.inference_ms],
+    ["Projection + fusion", tm.projection_ms], ["Traversability", tm.traversability_ms],
+    ["Total", tm.total_ms]
+  ];
+  document.getElementById("timing").innerHTML = rows.map(([k,v]) =>
+    '<dt>' + k + '</dt><dd>' + v.toFixed(1) + ' ms</dd>').join("") +
+    '<dt>Browser re-grid</dt><dd>' + rebuildMs.toFixed(1) + ' ms</dd>';
+
+  const prev = S.frame > 0 ? FRAMES[S.frame - 1] : f;
+  const dt = Math.max(f.t - prev.t, 1e-3);
+  const dx = f.sensor[0] - prev.sensor[0], dy = f.sensor[1] - prev.sensor[1];
+  const speed = S.frame > 0 ? Math.hypot(dx, dy) / dt : 0;
+  const distance = Math.hypot(f.sensor[0] - FRAMES[0].sensor[0],
+                              f.sensor[1] - FRAMES[0].sensor[1]);
+  document.getElementById("motion").innerHTML = [
+    ["Speed", speed.toFixed(1) + " m/s"],
+    ["Distance", distance.toFixed(1) + " m"],
+    ["Heading", (f.yaw * 180 / Math.PI).toFixed(1) + "°"],
+    ["Scan rate", META.sensor.rpm.toFixed(0) + " rpm"]
+  ].map(([k,v]) => '<dt>' + k + '</dt><dd>' + v + '</dd>').join("");
+
+  document.getElementById("framereadout").textContent =
+    "frame " + f.index + " · t=" + f.t.toFixed(1) + " s · " +
+    GRID.points.toLocaleString() + " returns mapped · " +
+    (1000/tm.total_ms).toFixed(1) + " fps";
+}
+
+/* ---------- controls ---------- */
+const ringWrap = document.getElementById("rings");
+function buildRingControls(){
+  ringWrap.innerHTML = "";
+  for(let L=1; L<META.n_levels; L++){
+    const f = document.createElement("div");
+    f.className = "field";
+    f.innerHTML = '<label for="ring'+L+'">' +
+      (S.base*(1<<L)*100).toFixed(0) + ' cm beyond <span class="val" id="ringv'+L+'">' +
+      S.rings[L].toFixed(0) + ' m</span></label>' +
+      '<input type="range" id="ring'+L+'" min="2" max="100" step="1" value="'+S.rings[L]+'">';
+    ringWrap.appendChild(f);
+    f.querySelector("input").addEventListener("input", e => {
+      const v = +e.target.value;
+      S.rings[L] = v;
+      for(let k=1; k<META.n_levels; k++){
+        if(k < L) S.rings[k] = Math.min(S.rings[k], v);
+        if(k > L) S.rings[k] = Math.max(S.rings[k], v);
+        const el = document.getElementById("ring"+k);
+        if(el){ el.value = S.rings[k]; document.getElementById("ringv"+k).textContent = S.rings[k].toFixed(0)+" m"; }
+      }
+      recompute();
+    });
+  }
+  document.getElementById("cellsizes").textContent =
+    Array.from({length: META.n_levels}, (_,L) => (S.base*(1<<L)*100).toFixed(0)).join("/") + " cm";
+}
+
+const LAYERS = [["elevation","Elevation"],["class","Semantics"],
+                ["trav","Traversable"],["lod","Cell size"],["relief","Relief"]];
+const layerWrap = document.getElementById("layers");
+LAYERS.forEach(([k, lbl]) => {
+  const b = document.createElement("button");
+  b.textContent = lbl;
+  b.setAttribute("aria-pressed", String(k === S.layer));
+  b.addEventListener("click", () => {
+    S.layer = k;
+    [...layerWrap.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+    draw();
+  });
+  layerWrap.appendChild(b);
+});
+
+const baseSlider = document.getElementById("base");
+function syncBase(){
+  document.getElementById("baseval").textContent = (S.base*100).toFixed(0) + " cm";
+  buildRingControls();
+}
+baseSlider.addEventListener("input", e => {
+  S.base = BASE_CHOICES[+e.target.value - 2];
+  syncBase();
+  recompute();
+});
+
+const zoom = document.getElementById("zoom");
+zoom.addEventListener("input", e => {
+  S.extent = +e.target.value;
+  document.getElementById("zoomval").textContent = "±" + S.extent + " m";
+  draw();
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  S.rings = META.ring_radii.slice();
+  S.base = META.base_cell;
+  baseSlider.value = 5;
+  syncBase();
+  recompute();
+});
+document.getElementById("tRings").addEventListener("click", e => {
+  S.showRings = !S.showRings;
+  e.target.setAttribute("aria-pressed", String(S.showRings));
+  draw();
+});
+document.getElementById("tGrid").addEventListener("click", e => {
+  S.showEdges = !S.showEdges;
+  e.target.setAttribute("aria-pressed", String(S.showEdges));
+  draw();
+});
+document.getElementById("tAcc").insertAdjacentHTML("beforebegin",
+  '<button id="tReturns" aria-pressed="true">Lidar returns</button>');
+document.getElementById("tReturns").addEventListener("click", e => {
+  S.showReturns = !S.showReturns;
+  e.target.setAttribute("aria-pressed", String(S.showReturns));
+  draw();
+});
+document.getElementById("tCity").addEventListener("click", e => {
+  S.cityView = !S.cityView;
+  S.output25d = false;
+  S.transitionView = false;
+  e.target.setAttribute("aria-pressed", String(S.cityView));
+  syncViewStatus();
+  draw();
+});
+document.getElementById("tZones").addEventListener("click", e => {
+  S.showZones = !S.showZones;
+  S.output25d = false;
+  S.transitionView = false;
+  if(S.showZones){
+    S.cityView = false;
+    document.getElementById("tCity").setAttribute("aria-pressed", "false");
+  }
+  e.target.setAttribute("aria-pressed", String(S.showZones));
+  syncViewStatus();
+  draw();
+});
+document.getElementById("zoneMode").addEventListener("change", e => {
+  applyZoneMode(e.target.value);
+});
+document.getElementById("tAcc").addEventListener("click", e => {
+  S.accumulate = !S.accumulate;
+  e.target.setAttribute("aria-pressed", String(S.accumulate));
+  recompute();
+});
+document.getElementById("clearPath").addEventListener("click", () => {
+  S.goal = null; S.path = null; draw();
+});
+
+const frameSlider = document.getElementById("frame");
+frameSlider.max = String(FRAMES.length - 1);
+frameSlider.addEventListener("input", e => { S.frame = +e.target.value; recompute(); });
+document.getElementById("step").addEventListener("click", () => {
+  S.frame = (S.frame + 1) % FRAMES.length;
+  frameSlider.value = String(S.frame);
+  recompute();
+});
+let timer = null;
+document.getElementById("play").addEventListener("click", e => {
+  S.playing = !S.playing;
+  e.target.textContent = S.playing ? "Pause" : "Play";
+  if(timer) clearInterval(timer);
+  if(S.playing) timer = setInterval(() => {
+    S.frame = (S.frame + 1) % FRAMES.length;
+    frameSlider.value = String(S.frame);
+    recompute();
+  }, Math.max(120, ((FRAMES[(S.frame + 1) % FRAMES.length].t - FRAMES[S.frame].t) * 1000)));
+});
+
+/* ---------- pointer ---------- */
+const tip = document.getElementById("tip");
+function canvasToWorld(ev){
+  const r = canvas.getBoundingClientRect();
+  const px = ev.clientX - r.left, py = ev.clientY - r.top;
+  const s = VIEW.size / (2*S.extent);
+  return [(px - VIEW.size/2)/s, (VIEW.size/2 - py)/s];
+}
+canvas.addEventListener("mousemove", ev => {
+  if(!GRID) return;
+  const [wx, wy] = canvasToWorld(ev);
+  const L = leafLevel(wx, wy, S.base, S.rings, META.n_levels);
+  const r = S.base * (1 << L);
+  const key = L*4398046511104 + (Math.floor(wx/r)+65536)*2097152 + (Math.floor(wy/r)+65536);
+  const c = GRID.map.get(key);
+  if(!c){ tip.hidden = true; return; }
+  const t = c.tile;
+  tip.hidden = false;
+  const rect = canvas.getBoundingClientRect();
+  tip.style.left = Math.min(ev.clientX - rect.left + 14, VIEW.size - 240) + "px";
+  tip.style.top = (ev.clientY - rect.top + 14) + "px";
+  tip.innerHTML =
+    '<b>' + (c.r*100).toFixed(0) + ' cm cell</b> · level ' + c.L + '<br>' +
+    'range ' + Math.hypot(c.cx, c.cy).toFixed(1) + ' m<br>' +
+    'elevation ' + c.z.toFixed(3) + ' m<br>' +
+    'relief ' + c.relief.toFixed(3) + ' m · ' + c.n + ' returns<br>' +
+    'class ' + META.class_names[c.cls].replace(/_/g," ") +
+    (t ? '<br>slope ' + t.slope.toFixed(1) + '°' +
+         (t.reach ? ' · <span style="color:var(--c0)">reachable</span>'
+                  : ' · <span style="color:var(--c3)">not reachable</span>') : '');
+});
+canvas.addEventListener("mouseleave", () => { tip.hidden = true; });
+canvas.addEventListener("click", ev => {
+  S.goal = canvasToWorld(ev);
+  S.path = NAV ? planRoute(NAV, S.goal) : null;
+  draw();
+});
+
+/* ---------- static report ---------- */
+function table(el, head, rows){
+  document.getElementById(el).innerHTML =
+    "<thead><tr>" + head.map(h => "<th>"+h+"</th>").join("") + "</tr></thead><tbody>" +
+    rows.map(r => "<tr>" + r.map(v => "<td>"+v+"</td>").join("") + "</tr>").join("") +
+    "</tbody>";
+}
+function pct(v){ return (100*v).toFixed(1) + "%"; }
+
+table("tBand", ["Range", "Points", "Accuracy", "mIoU"],
+  BENCH.per_band.map(b => [b.band, b.points.toLocaleString(), pct(b.accuracy), b.mIoU.toFixed(3)]));
+
+table("tElev", ["Range", "Cell", "Mean |err|", "P95 |err|", "Cells"],
+  BENCH.elevation.map(e => [e.band, (e.median_cell_size_m*100).toFixed(0)+" cm",
+    (e.mae_m*1000).toFixed(1)+" mm", (e.p95_abs_m*1000).toFixed(0)+" mm",
+    e.cells.toLocaleString()]));
+
+table("tClass", ["Class", "IoU", "Recall", "Precision"],
+  META.class_names.map(n => [n.replace(/_/g," "),
+    BENCH.semantic["iou_"+n].toFixed(3),
+    pct(BENCH.semantic["recall_"+n]),
+    pct(BENCH.semantic["precision_"+n])]));
+
+const integ = BENCH.integrity;
+table("tIntegrity", ["Invariant", "Measured", "Required"], [
+  ["Points resolving to a leaf", pct(integ.points_mapped), "100%"],
+  ["Leaf level matches lookup", pct(integ.leaf_level_consistency), "100%"],
+  ["Cells stored at two levels", integ.cross_level_overlaps.toFixed(0), "0"],
+  ["Cells inside the wrong ring", integ.ring_violations.toFixed(0), "0"],
+  ["Projection alignment error", integ.alignment_error_m.toFixed(0)+" m", "0 m"]
+]);
+
+const lat = BENCH.latency, mem = BENCH.memory, sem = BENCH.semantic;
+document.getElementById("reportLede").textContent =
+  BENCH.frames + " frames of a held-out drive, " +
+  "segmented by " + BENCH.backend + ": " + pct(sem.accuracy) + " point accuracy, " +
+  sem.mIoU.toFixed(3) + " mIoU, " + lat.total_ms_mean.toFixed(0) + " ms per frame end to end (" +
+  lat.fps_mean.toFixed(1) + " fps on two CPU cores, no GPU), and a map " +
+  mem.reduction_vs_uniform_fine.toFixed(0) + "× smaller than the uniform 5 cm grid it replaces.";
+
+document.getElementById("stamp").innerHTML =
+  "<b>" + META.sensor.beams + "-beam</b> spinning lidar · " + META.sensor.rpm/60 + " Hz<br>" +
+  "levels " + Array.from({length:META.n_levels},(_,L)=>(META.base_cell*(1<<L)*100).toFixed(0)).join(" / ") + " cm<br>" +
+  "backend <b>" + META.backend + "</b><br>" +
+  "checkpoint <b>" + (META.checkpoint || "default") + "</b>";
+document.getElementById("footStamp").textContent = "generated " + META.generated;
+document.getElementById("stepTxt").textContent = (META.max_step_height*100).toFixed(0) + " cm";
+document.getElementById("slopeTxt").textContent = META.max_slope_deg.toFixed(0) + "°";
+
+/* ---------- boot ---------- */
+syncBase();
+syncViewStatus();
+document.getElementById("zoomval").textContent = "±" + S.extent + " m";
+recompute();
+window.addEventListener("resize", () => { draw(); });
+})();
+</script>

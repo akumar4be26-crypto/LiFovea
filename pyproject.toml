@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avr25d"
+version = "1.0.0"
+description = "Adaptive variable-resolution 2.5D lidar mapping for dynamic environment perception"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+learn = ["torch>=2.0"]
+fast = ["scipy>=1.10"]
+all = ["torch>=2.0", "scipy>=1.10"]
+
+[project.scripts]
+avr25d = "avr25d.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["avr25d*"]

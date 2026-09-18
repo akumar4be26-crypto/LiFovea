@@ -1,0 +1,271 @@
+{
+  "config": {
+    "sensor": {
+      "n_beams": 64,
+      "fov_up_deg": 2.0,
+      "fov_down_deg": -24.9,
+      "azimuth_steps": 1024,
+      "max_range": 100.0,
+      "min_range": 1.2,
+      "mount_height": 1.73,
+      "range_sigma0": 0.015,
+      "range_sigma_rel": 0.0012,
+      "dropout": 0.015,
+      "rpm": 600.0
+    },
+    "lod": {
+      "base_cell": 0.05,
+      "n_levels": 5,
+      "ring_radii": [
+        0.0,
+        10.0,
+        20.0,
+        40.0,
+        70.0
+      ],
+      "max_range": 100.0
+    },
+    "fusion": {
+      "z_sigma0": 0.02,
+      "z_sigma_rel": 0.004,
+      "quantisation_gain": 0.35,
+      "process_var": 0.0009,
+      "min_var": 0.0001,
+      "stale_frames": 25
+    },
+    "vehicle": {
+      "max_slope_deg": 22.0,
+      "max_step_height": 0.1,
+      "max_roughness": 0.06,
+      "clearance_height": 2.4,
+      "body_radius": 0.9,
+      "dynamic_inflation": 1.6,
+      "nav_cell": 0.8
+    },
+    "model": {
+      "backend": "auto",
+      "architecture": "pointnet2lite",
+      "checkpoint": "checkpoints/avr25d.pt",
+      "device": "cpu",
+      "chunk_size": 32768,
+      "voxel_size": 0.2,
+      "feature_radius": 0.55,
+      "far_stride": 1,
+      "foveal_radius": 25.0
+    },
+    "seed": 7
+  },
+  "backend": "torch:pointnet2lite",
+  "frames": 20,
+  "semantic": {
+    "accuracy": 0.953636602751504,
+    "points": 1060729,
+    "iou_drivable": 0.9053975565540321,
+    "recall_drivable": 0.9087655807168833,
+    "precision_drivable": 0.9959232892473296,
+    "iou_rough_terrain": 0.8846650791489645,
+    "recall_rough_terrain": 0.9922615671339438,
+    "precision_rough_terrain": 0.8908110618676695,
+    "iou_static_obstacle": 0.9699713094003906,
+    "recall_static_obstacle": 0.9923718727453241,
+    "precision_static_obstacle": 0.9772576835022561,
+    "iou_dynamic_object": 0.5478910369068541,
+    "recall_dynamic_object": 0.5816834248989323,
+    "precision_dynamic_object": 0.9041327640377024,
+    "mIoU": 0.8269812455025605
+  },
+  "semantic_raw": {
+    "accuracy": 0.9640313407100212,
+    "points": 1060729,
+    "iou_drivable": 0.9360460366659459,
+    "recall_drivable": 0.9831668950618686,
+    "precision_drivable": 0.9512917562023833,
+    "iou_rough_terrain": 0.9077943775878351,
+    "recall_rough_terrain": 0.9347453454089869,
+    "precision_rough_terrain": 0.9692167495007336,
+    "iou_static_obstacle": 0.9699713094003906,
+    "recall_static_obstacle": 0.9923718727453241,
+    "precision_static_obstacle": 0.9772576835022561,
+    "iou_dynamic_object": 0.5478910369068541,
+    "recall_dynamic_object": 0.5816834248989323,
+    "precision_dynamic_object": 0.9041327640377024,
+    "mIoU": 0.8404256901402565
+  },
+  "per_band": [
+    {
+      "band": "0-10 m",
+      "accuracy": 0.9530558823243469,
+      "points": 822872,
+      "iou_drivable": 0.9126747431695255,
+      "recall_drivable": 0.9155111619720355,
+      "precision_drivable": 0.9966168682317603,
+      "iou_rough_terrain": 0.8856690068843296,
+      "recall_rough_terrain": 0.9932274646945288,
+      "precision_rough_terrain": 0.8910501700680272,
+      "iou_static_obstacle": 0.9664819367069581,
+      "recall_static_obstacle": 0.9886422251319288,
+      "precision_static_obstacle": 0.9773334575425212,
+      "iou_dynamic_object": 0.596903460837887,
+      "recall_dynamic_object": 0.6421712718009014,
+      "precision_dynamic_object": 0.8943777292576419,
+      "mIoU": 0.8404322868996751
+    },
+    {
+      "band": "10-20 m",
+      "accuracy": 0.9732693295658875,
+      "points": 186864,
+      "iou_drivable": 0.8991255233235068,
+      "recall_drivable": 0.9017167275347197,
+      "precision_drivable": 0.9968141495701849,
+      "iou_rough_terrain": 0.9096517626827171,
+      "recall_rough_terrain": 0.9943137761695529,
+      "precision_rough_terrain": 0.9144085742685509,
+      "iou_static_obstacle": 0.9911593618614295,
+      "recall_static_obstacle": 0.9999709471237652,
+      "precision_static_obstacle": 0.9911879049676026,
+      "iou_dynamic_object": 0.0,
+      "recall_dynamic_object": 0.0,
+      "precision_dynamic_object": 0.0,
+      "mIoU": 0.6999841619669134
+    },
+    {
+      "band": "20-40 m",
+      "accuracy": 0.883939283292473,
+      "points": 38342,
+      "iou_drivable": 0.74198536233378,
+      "recall_drivable": 0.7547446786201112,
+      "precision_drivable": 0.9777234447161097,
+      "iou_rough_terrain": 0.8070936100646812,
+      "recall_rough_terrain": 0.9740928197649481,
+      "precision_rough_terrain": 0.8247984310307257,
+      "iou_static_obstacle": 0.8804984423676012,
+      "recall_static_obstacle": 0.9954215679368881,
+      "precision_static_obstacle": 0.8840788238974038,
+      "iou_dynamic_object": 0.40612382234185734,
+      "recall_dynamic_object": 0.4090138935953914,
+      "precision_dynamic_object": 0.9828990228013029,
+      "mIoU": 0.7089253092769799
+    },
+    {
+      "band": "40-70 m",
+      "accuracy": 0.9080925471798699,
+      "points": 9379,
+      "iou_drivable": 0.5606936416184971,
+      "recall_drivable": 0.5980271270036991,
+      "precision_drivable": 0.8998144712430427,
+      "iou_rough_terrain": 0.8106995884773662,
+      "recall_rough_terrain": 0.965423359651511,
+      "precision_rough_terrain": 0.8349423122203908,
+      "iou_static_obstacle": 0.974025974025974,
+      "recall_static_obstacle": 0.9858247422680413,
+      "precision_static_obstacle": 0.9878615702479339,
+      "iou_dynamic_object": 0.8380952380952381,
+      "recall_dynamic_object": 0.8627450980392157,
+      "precision_dynamic_object": 0.967032967032967,
+      "mIoU": 0.7958786105542689
+    },
+    {
+      "band": "70-100 m",
+      "accuracy": 0.9256880733944954,
+      "points": 3270,
+      "iou_drivable": 0.7631103074141049,
+      "recall_drivable": 0.7858472998137802,
+      "precision_drivable": 0.9634703196347032,
+      "iou_rough_terrain": 0.8567639257294429,
+      "recall_rough_terrain": 0.96996996996997,
+      "precision_rough_terrain": 0.8801089918256131,
+      "iou_static_obstacle": 0.9222065063649222,
+      "recall_static_obstacle": 0.9553113553113554,
+      "precision_static_obstacle": 0.9637841832963784,
+      "iou_dynamic_object": 0.23684210526315788,
+      "recall_dynamic_object": 0.25,
+      "precision_dynamic_object": 0.8181818181818182,
+      "mIoU": 0.694730711192907
+    }
+  ],
+  "elevation": [
+    {
+      "band": "0-10 m",
+      "cells": 94106,
+      "median_cell_size_m": 0.05000000074505806,
+      "rmse_m": 0.017709164098638992,
+      "mae_m": 0.004306941613668454,
+      "bias_m": 0.0003973788158314531,
+      "p95_abs_m": 0.010498604125467041
+    },
+    {
+      "band": "10-20 m",
+      "cells": 25712,
+      "median_cell_size_m": 0.10000000149011612,
+      "rmse_m": 0.04173162550489002,
+      "mae_m": 0.005643033610145467,
+      "bias_m": 0.0011872488984830461,
+      "p95_abs_m": 0.02214157935057397
+    },
+    {
+      "band": "20-40 m",
+      "cells": 12933,
+      "median_cell_size_m": 0.20000000298023224,
+      "rmse_m": 0.035001580468271995,
+      "mae_m": 0.009296426594020498,
+      "bias_m": 0.0003488533746097927,
+      "p95_abs_m": 0.03804508698305594
+    },
+    {
+      "band": "40-70 m",
+      "cells": 5096,
+      "median_cell_size_m": 0.4000000059604645,
+      "rmse_m": 0.2613707209006483,
+      "mae_m": 0.04214604953220298,
+      "bias_m": 0.020893227116178144,
+      "p95_abs_m": 0.07707067950148964
+    },
+    {
+      "band": "70-100 m",
+      "cells": 1350,
+      "median_cell_size_m": 0.800000011920929,
+      "rmse_m": 0.1412886440939144,
+      "mae_m": 0.05423620166238899,
+      "bias_m": 0.00288943509275958,
+      "p95_abs_m": 0.14687809109773728
+    }
+  ],
+  "latency": {
+    "features_ms_mean": 16.077663222252642,
+    "features_ms_p95": 17.457210799989298,
+    "inference_ms_mean": 118.39923927772765,
+    "inference_ms_p95": 130.09546185001,
+    "projection_ms_mean": 56.51595199995225,
+    "projection_ms_p95": 66.41159560010692,
+    "traversability_ms_mean": 38.76375016670863,
+    "traversability_ms_p95": 48.8448874499454,
+    "total_ms_mean": 229.76629311109616,
+    "total_ms_p95": 259.0574375496544,
+    "fps_mean": 4.352248480226305,
+    "fps_p95_worst": 3.8601478091449377
+  },
+  "memory": {
+    "adaptive_bytes": 9882300.0,
+    "uniform_fine_bytes": 960000000.0,
+    "uniform_coarse_bytes": 3750000.0,
+    "dense_voxel_bytes": 800000000.0,
+    "cells": 164705.0,
+    "reduction_vs_uniform_fine": 97.14337755380832,
+    "reduction_vs_dense_voxel": 80.9528146281736
+  },
+  "integrity": {
+    "points_mapped": 1.0,
+    "leaf_level_consistency": 1.0,
+    "cross_level_overlaps": 0.0,
+    "ring_violations": 0.0,
+    "alignment_error_m": 0.0
+  },
+  "level_histogram": [
+    110611,
+    32502,
+    14656,
+    5471,
+    1465
+  ],
+  "notes": []
+}
