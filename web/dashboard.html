@@ -351,11 +351,6 @@ code{font-family:var(--mono);font-size:12px;background:var(--paper-2);
   </div>
 </section>
 
-<footer>
-  <span>Built from the <code>avr25d</code> package — simulator, segmentation network,
-    grid engine and planner all run the same code that produced these figures.</span>
-  <span id="footStamp"></span>
-</footer>
 </div>
 
 <script>
@@ -1448,7 +1443,6 @@ document.getElementById("stamp").innerHTML =
   "levels " + Array.from({length:META.n_levels},(_,L)=>(META.base_cell*(1<<L)*100).toFixed(0)).join(" / ") + " cm<br>" +
   "backend <b>" + META.backend + "</b><br>" +
   "checkpoint <b>" + (META.checkpoint || "default") + "</b>";
-document.getElementById("footStamp").textContent = "generated " + META.generated;
 document.getElementById("stepTxt").textContent = (META.max_step_height*100).toFixed(0) + " cm";
 document.getElementById("slopeTxt").textContent = META.max_slope_deg.toFixed(0) + "°";
 
