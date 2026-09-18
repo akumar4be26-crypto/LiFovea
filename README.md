@@ -38,6 +38,20 @@ python -m avr25d.cli bench --frames 20 --report BENCHMARK.md
 python -m unittest discover -s tests     # 44 tests, ~12 s
 ```
 
+### Deploy as a web service
+
+The included `Dockerfile` runs the dashboard on the port supplied by the host:
+
+```bash
+docker build -t lifovea .
+docker run --rm -p 8080:8080 lifovea
+```
+
+For Render, create a new Blueprint from this repository. Render will read
+`render.yaml`, build the container, and provide a public URL. The `/healthz`
+endpoint is used for service health checks. The hosted dashboard uses the
+bundled simulator and does not require LiDAR hardware.
+
 No dataset download and no annotation: the built-in simulator ray-casts a
 64-beam lidar through a procedural urban scene and hands back exact per-point
 ground truth, which is what makes every number above a measurement rather than

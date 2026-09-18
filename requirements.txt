@@ -1,5 +1,6 @@
 # Hard requirement -------------------------------------------------------
 numpy>=1.24
+psutil>=5.9
 
 # Optional, and the reason the stack still runs without them -------------
 # torch      : the learned segmentation backends (pointnet2lite, sparsevoxel).

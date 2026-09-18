@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: lifovea-dashboard
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000

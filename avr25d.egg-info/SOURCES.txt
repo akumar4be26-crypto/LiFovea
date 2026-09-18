@@ -18,6 +18,7 @@ avr25d/grid/vrgrid.py
 avr25d/metrics/__init__.py
 avr25d/metrics/evaluate.py
 avr25d/models/__init__.py
+avr25d/models/data.py
 avr25d/models/features.py
 avr25d/models/geometric.py
 avr25d/models/infer.py
@@ -33,3 +34,4 @@ avr25d/sim/world.py
 tests/test_grid.py
 tests/test_perception.py
 tests/test_pipeline.py
+tests/test_telemetry.py

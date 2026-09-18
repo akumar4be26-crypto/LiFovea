@@ -153,10 +153,10 @@ class VehicleConfig:
 # --------------------------------------------------------------------------
 @dataclass
 class ModelConfig:
-    backend: str = "auto"               # auto | torch | numpy
-    architecture: str = "pointnet2lite"  # pointnet2lite | sparsevoxel | geometric
+    backend: str = "torch"              # auto | torch | numpy
+    architecture: str = "sparsevoxel"   # pointnet2lite | sparsevoxel | geometric
     checkpoint: str = "checkpoints/avr25d.pt"
-    device: str = "cpu"
+    device: str = "mps"                 # cpu | mps | cuda
     #: points are chunked before being pushed through the network
     chunk_size: int = 32768
     #: voxel size used by the sparse-voxel backbone

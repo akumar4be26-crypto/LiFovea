@@ -7,6 +7,7 @@ Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy>=1.24
+Requires-Dist: psutil>=5.9
 Provides-Extra: learn
 Requires-Dist: torch>=2.0; extra == "learn"
 Provides-Extra: fast
@@ -56,6 +57,20 @@ python -m avr25d.cli bench --frames 20 --report BENCHMARK.md
 python -m unittest discover -s tests     # 44 tests, ~12 s
 ```
 
+### Deploy as a web service
+
+The included `Dockerfile` runs the dashboard on the port supplied by the host:
+
+```bash
+docker build -t lifovea .
+docker run --rm -p 8080:8080 lifovea
+```
+
+For Render, create a new Blueprint from this repository. Render will read
+`render.yaml`, build the container, and provide a public URL. The `/healthz`
+endpoint is used for service health checks. The hosted dashboard uses the
+bundled simulator and does not require LiDAR hardware.
+
 No dataset download and no annotation: the built-in simulator ray-casts a
 64-beam lidar through a procedural urban scene and hands back exact per-point
 ground truth, which is what makes every number above a measurement rather than
@@ -66,6 +81,22 @@ To train the network (≈100 s on CPU):
 ```bash
 python -m avr25d.cli train --epochs 14   # writes checkpoints/avr25d.pt
 ```
+
+### Real-world fine-tuning
+
+The trainer also accepts labeled real-world scans exported as `.npz` files.
+Each archive must contain `xyz` with shape `(N, 3)` and integer `label` with
+shape `(N,)`, using the four project classes `0..3`; `intensity` is optional.
+Pass a file or directory of scans for mixed simulator + real training, and a
+separate held-out directory for validation:
+
+```bash
+python -m avr25d.cli train --real-data data/real/train \
+  --real-val-data data/real/val --epochs 14
+```
+
+The simulator remains in the training mix by default, preserving controlled
+coverage for rare cases while real scans improve sensor and scene realism.
 
 Without a checkpoint the stack falls back to a deterministic geometric
 segmenter and keeps running — 91.7 % accuracy instead of 95.4 %.
