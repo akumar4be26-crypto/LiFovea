@@ -153,7 +153,7 @@ class VehicleConfig:
 # --------------------------------------------------------------------------
 @dataclass
 class ModelConfig:
-    backend: str = "torch"              # auto | torch | numpy
+    backend: str = "auto"               # auto | torch | numpy
     architecture: str = "sparsevoxel"   # pointnet2lite | sparsevoxel | geometric
     checkpoint: str = "checkpoints/avr25d.pt"
     device: str = "mps"                 # cpu | mps | cuda
