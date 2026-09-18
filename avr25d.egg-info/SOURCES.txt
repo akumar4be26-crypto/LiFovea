@@ -35,3 +35,9 @@ tests/test_grid.py
 tests/test_perception.py
 tests/test_pipeline.py
 tests/test_telemetry.py
+tools/__init__.py
+tools/build_artifact.py
+tools/convert_nuscenes_boxes.py
+tools/convert_semantickitti.py
+tools/export_demo.py
+tools/inspect_nuscenes.py

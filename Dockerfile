@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir .
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
+ENV PYTHONPATH=/app
 
 EXPOSE 8080
 
